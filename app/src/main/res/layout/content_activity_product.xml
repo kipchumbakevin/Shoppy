@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:orientation="vertical"
+    android:layout_gravity="center"
+    android:layout_height="match_parent"
+    tools:context=".ProductActivity">
+    <Spinner
+        android:id="@+id/category_spinner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+    <ImageView
+        android:id="@+id/produt_image"
+        android:src="@drawable/hover_board"
+        android:scaleType="centerCrop"
+        android:layout_width="match_parent"
+        android:layout_height="100dp" />
+
+    <EditText
+        android:id="@+id/product_name_edit"
+        android:layout_width="match_parent"
+        android:hint="@string/product_name"
+        android:layout_height="wrap_content" />
+
+    <EditText
+        android:id="@+id/product_price_edit"
+
+        android:layout_width="match_parent"
+        android:hint="@string/product_price"
+        android:layout_height="wrap_content" />
+    <EditText
+        android:id="@+id/product_description_edit"
+        android:layout_width="match_parent"
+        android:hint="@string/product_description"
+        android:layout_height="wrap_content" />
+    <Button
+        android:id="@+id/add_product"
+        android:background="@color/colorBrown"
+        android:textColor="@color/colorWhite"
+        android:text="@string/add_product"
+        android:layout_gravity="center"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+
+</LinearLayout>
