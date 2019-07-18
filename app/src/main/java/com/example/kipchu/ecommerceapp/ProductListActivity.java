@@ -1,4 +1,5 @@
 package com.example.kipchu.ecommerceapp;
+import android.app.DownloadManager;
 import android.content.Intent;
 
 import android.os.Bundle;
@@ -22,8 +23,13 @@ import android.view.View;
 import android.widget.Toast;
 
 
-import java.util.ArrayList;
+import com.example.kipchu.ecommerceapp.ob_box.ObjectBox;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import io.objectbox.Box;
+import io.objectbox.query.Query;
 
 
 public class ProductListActivity extends AppCompatActivity {
@@ -32,12 +38,14 @@ public class ProductListActivity extends AppCompatActivity {
 
     RecyclerView mRecyclerView;
     int position=78;
+    private Box<Product> mProductBox;
+    private Query<Product> mProductQuery;
 
-    private String[] productNames = {"Hoverboard v-4 s","Natural light googles","Black Lether Wallet","Nike supra 3","Beat wireless earphones","Khaki handbags","Brown Rubber"};
-    private String[] productStrikedPrice={"20000","1500","180000","4000","2000","1700","3000"};
-    private String[] productPrices={"17000","800","1500","3500","1500","1200","2200"};
-    private String[] productDescription={"gg","hh","jj", "dd", "yy", "gf", "gf"};
-    private int[] productImages = {R.drawable.hover_board,R.drawable.googles,R.drawable.wallet,R.drawable.nike,R.drawable.beat_headphones,R.drawable.h_bag,R.drawable.rubber_shoe};
+   // private String[] productNames = {"Hoverboard v-4 s","Natural light googles","Black Lether Wallet","Nike supra 3","Beat wireless earphones","Khaki handbags","Brown Rubber"};
+    //private String[] productStrikedPrice={"20000","1500","180000","4000","2000","1700","3000"};
+    //private String[] productPrices={"17000","800","1500","3500","1500","1200","2200"};
+    //private String[] productDescription={"gg","hh","jj", "dd", "yy", "gf", "gf"};
+    //private int[] productImages = {R.drawable.hover_board,R.drawable.googles,R.drawable.wallet,R.drawable.nike,R.drawable.beat_headphones,R.drawable.h_bag,R.drawable.rubber_shoe};
 
     ProductListAdapter mProductListAdapter ;
 
@@ -58,7 +66,6 @@ public class ProductListActivity extends AppCompatActivity {
 
 
 
-        populateRecyclerView();
 
         mRecyclerView.setAdapter(mProductListAdapter);
 
@@ -87,33 +94,19 @@ public class ProductListActivity extends AppCompatActivity {
 
         });
         Log.d("Start", "Activity onCreate and position variable = "+ position);
-
+       initObjectBox();
     }
-
-    public  void populateRecyclerView(){
-
+    private void initObjectBox(){
+        mProductBox = ObjectBox.get().boxFor(Product.class);
+    }
+    private void updateProducts(){
         mProductArrayList.clear();
-
-        int index;
-        for(index = 0; index<productNames.length; index++){
-
-            Product product=new Product();
-
-            product.setName(productNames[index]);
-
-            product.setPrice(productPrices[index]);
-            product.setStrikedPrice(productStrikedPrice[index]);
-            product.setDescription(productDescription [index]);
-
-            product.setImage(productImages[index]);
-
-            mProductArrayList.add(product);
-
-        }
-
+        mProductQuery = mProductBox.query().order(Product_.__ID_PROPERTY).build();
+        List<Product>products = mProductQuery.find();
+        mProductArrayList.addAll(products);
         mProductListAdapter.notifyDataSetChanged();
-
     }
+
 
     @Override
     protected void onStart() {
@@ -125,6 +118,7 @@ public class ProductListActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         Log.d("Start", "Activity onResume");
+        updateProducts();
     }
 
     @Override

@@ -1,14 +1,29 @@
 package com.example.kipchu.ecommerceapp;
 
+import io.objectbox.annotation.Entity;
+import io.objectbox.annotation.Id;
+
 /**
  * Created by KIPCHU on 27/06/2019.
  */
 
-public class Product {
+@Entity public class Product {
+    @Id long id;
 
     String category,name,price,strikedPrice,description;
 
     int image;
+
+    public Product(String category, String name, String price, String description, int image) {
+        this.category = category;
+        this.name = name;
+        this.price = price;
+        this.description = description;
+        this.image = image;
+    }
+
+    public Product() {
+    }
 
     public String getCategory() {
         return category;
@@ -57,5 +72,6 @@ public class Product {
     public void setImage(int image) {
         this.image = image;
     }
+
 }
 

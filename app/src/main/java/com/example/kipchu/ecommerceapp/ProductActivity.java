@@ -1,8 +1,10 @@
 package com.example.kipchu.ecommerceapp;
 
 
+        import android.app.Activity;
         import android.content.Intent;
         import android.graphics.Bitmap;
+        import android.graphics.BitmapFactory;
         import android.net.Uri;
         import android.provider.MediaStore;
         import android.support.v7.app.AppCompatActivity;
@@ -21,26 +23,35 @@ package com.example.kipchu.ecommerceapp;
         import android.widget.Spinner;
         import android.widget.Toast;
 
+        import com.example.kipchu.ecommerceapp.ob_box.ObjectBox;
+
+        import java.io.FileNotFoundException;
+        import java.io.InputStream;
         import java.util.ArrayList;
         import java.util.List;
+
+        import io.objectbox.Box;
 
 public class ProductActivity extends AppCompatActivity {
     private static final int REQUEST_CODE = 433;
     private static final int DEFAULT_POSITION = -2;
+    private static final int RESULT_LOAD_IMAGE = 433;
     EditText productName,productDescription,productPrice;
     Button addProduct, addMail;
     Spinner categorySpinner;
     ImageView productImage;
     private int Position;
     private int mPosition;
+    private Box<Product>mProductBox;
 
-  private void getIntentPosition(){
+    private void getIntentPosition(){
       mPosition = getIntent().getIntExtra(ProductListAdapter.CURRENT_POSITION_VALUE,DEFAULT_POSITION);
   }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_product);
+        mProductBox = ObjectBox.get().boxFor(Product.class);
         productName=(EditText) findViewById(R.id.product_name_edit);
         productDescription=(EditText) findViewById(R.id.product_description_edit);
         productPrice=(EditText) findViewById(R.id.product_price_edit);
@@ -49,8 +60,9 @@ public class ProductActivity extends AppCompatActivity {
         productImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent i = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                startActivityForResult(i, REQUEST_CODE);
+                getGallery();
+              //  Intent i = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+              //  startActivityForResult(i, REQUEST_CODE);
             }
         });
         addMail=(Button) findViewById(R.id.add_mail);
@@ -66,9 +78,9 @@ public class ProductActivity extends AppCompatActivity {
             public void onClick(View view) {
                 if(isErrors()){
                     Toast.makeText(ProductActivity.this, "Please ensure you fill all the fields before proceeding", Toast.LENGTH_LONG).show();
-                    return;
                 }else{
-                    Toast.makeText(ProductActivity.this, "Item will be added", Toast.LENGTH_SHORT).show();
+                    addProduct();
+                   // Toast.makeText(ProductActivity.this, "Item will be added", Toast.LENGTH_SHORT).show();
                 }
 
             }
@@ -77,6 +89,7 @@ public class ProductActivity extends AppCompatActivity {
         getIntentPosition();
        fillData();
     }
+
 
     private void fillData() {
         if (mPosition != DEFAULT_POSITION) {
@@ -147,16 +160,17 @@ public class ProductActivity extends AppCompatActivity {
         return selected;
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);//collect result
-        if(resultCode==RESULT_OK && requestCode==REQUEST_CODE && data!=null){
-            Bundle extras= data.getExtras();
-            Bitmap b=(Bitmap) extras.get("data");
-            productImage.setImageBitmap(b);
+   // @Override
+   // protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+   //     super.onActivityResult(requestCode, resultCode, data);//collect result
+   //     if(resultCode==RESULT_OK && requestCode==REQUEST_CODE && data!=null){
+   //         Bundle extras= data.getExtras();
+    //        Bitmap b=(Bitmap) extras.get("data");
+    //        productImage.setImageBitmap(b);
 
-        }
-    }
+       // }
+   // }
+
    // @Override
     //public void onBackPressed() {
        //Toast.makeText(this,"Are you sure.." ,Toast.LENGTH_SHORT).show();
@@ -193,12 +207,40 @@ public class ProductActivity extends AppCompatActivity {
         }
         return super.onOptionsItemSelected(item);
     }
+    public void getGallery(){
+        Intent i = new Intent(Intent.ACTION_PICK);
+        i.setType("image/*");
+       // String[] mimeTypes = {"image/jpeg","image/png"};
+        startActivityForResult(i,RESULT_LOAD_IMAGE);
+
+    }
+    protected void onActivityResult(int requestCode, int resultCode, Intent data){
+        super.onActivityResult(requestCode, resultCode,data);
+        if (resultCode == this. RESULT_CANCELED) {
+            return;
+        }
+            try{
+                final Uri imageUri = data.getData();
+                final InputStream imageStream = getContentResolver().openInputStream(imageUri);
+                final Bitmap selectedImage = BitmapFactory.decodeStream(imageStream);
+                productImage.setImageBitmap(selectedImage);
+            }catch (FileNotFoundException e){
+                e.printStackTrace();
+                Toast.makeText(ProductActivity.this, "Something went wrong", Toast.LENGTH_LONG).show();
+            }
+        }else{
+            Toast.makeText(ProductActivity.this, "You haven't picked Image",Toast.LENGTH_LONG).show();
+        }
+
+
+    }
 
     private void movePrevious() {
         mPosition--;
         fillData();
         invalidateOptionsMenu();
     }
+
 
     private void moveNext() {
         mPosition++;
@@ -214,5 +256,17 @@ public class ProductActivity extends AppCompatActivity {
         item.setVisible(mPosition<productPosition);
         prev.setVisible(mPosition!=0);
         return super.onPrepareOptionsMenu(menu);
+    }
+    private void addProduct(){
+        //collect details
+        String name = productName.getText().toString();
+        String price = productPrice.getText().toString();
+        String description = productDescription.getText().toString();
+        String category = categorySpinner.getSelectedItem().toString();
+        //insert into product models
+        Product product = new Product(category,name,price,description,R.drawable.beat_headphones);
+        //add the product to object box->productBox
+        mProductBox.put(product);
+        finish();
     }
 }
