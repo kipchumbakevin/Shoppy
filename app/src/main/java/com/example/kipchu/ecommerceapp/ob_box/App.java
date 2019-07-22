@@ -17,7 +17,7 @@ public class App extends Application {
 
         // Optional: if you distribute your app as App Bundle, provides detection of incomplete
 
-        // installs due to sideloading and helps users reinstall the app from Google Play.
+        // installs due to side loading and helps users reinstall the app from Google Play.
 
         // https://docs.objectbox.io/android/app-bundle-and-split-apk
 

@@ -1,16 +1,29 @@
 package com.example.kipchu.ecommerceapp;
 
 
+        import android.Manifest;
         import android.app.Activity;
+        import android.app.AlertDialog;
+        import android.content.DialogInterface;
         import android.content.Intent;
+        import android.content.pm.PackageManager;
+        import android.content.pm.ResolveInfo;
         import android.graphics.Bitmap;
         import android.graphics.BitmapFactory;
+        import android.media.MediaScannerConnection;
         import android.net.Uri;
+        import android.os.Build;
+        import android.os.Environment;
         import android.provider.MediaStore;
+        import android.support.annotation.NonNull;
+        import android.support.annotation.Nullable;
+        import android.support.v4.content.ContextCompat;
+        import android.support.v4.content.FileProvider;
         import android.support.v7.app.AppCompatActivity;
         import android.os.Bundle;
         import android.text.TextUtils;
         import android.util.Log;
+        import android.view.LayoutInflater;
         import android.view.Menu;
         import android.view.MenuItem;
         import android.view.View;
@@ -23,19 +36,32 @@ package com.example.kipchu.ecommerceapp;
         import android.widget.Spinner;
         import android.widget.Toast;
 
+        import com.bumptech.glide.Glide;
         import com.example.kipchu.ecommerceapp.ob_box.ObjectBox;
 
+        import java.io.ByteArrayOutputStream;
+        import java.io.File;
         import java.io.FileNotFoundException;
+        import java.io.FileOutputStream;
+        import java.io.IOException;
         import java.io.InputStream;
         import java.util.ArrayList;
+        import java.util.Calendar;
         import java.util.List;
+        import java.util.Random;
 
         import io.objectbox.Box;
 
 public class ProductActivity extends AppCompatActivity {
     private static final int REQUEST_CODE = 433;
     private static final int DEFAULT_POSITION = -2;
-    private static final int RESULT_LOAD_IMAGE = 433;
+    private static final int REQUEST_CAMERA_PERMISSIONS = 67;
+    private static final int GALLERY_REQUEST_CODE = 677;
+    private static final String[] CAMERA_PERMISSION = new String[]{
+            Manifest.permission.CAMERA,
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+    } ;
     EditText productName,productDescription,productPrice;
     Button addProduct, addMail;
     Spinner categorySpinner;
@@ -43,6 +69,10 @@ public class ProductActivity extends AppCompatActivity {
     private int Position;
     private int mPosition;
     private Box<Product>mProductBox;
+    private Uri photoURI;
+    private File mPhotoFile;
+    //  private static final String IMAGE_DIRECTORY = "/demonuts";
+  //  private int GALLERY = 1, CAMERA = 2;
 
     private void getIntentPosition(){
       mPosition = getIntent().getIntExtra(ProductListAdapter.CURRENT_POSITION_VALUE,DEFAULT_POSITION);
@@ -60,9 +90,11 @@ public class ProductActivity extends AppCompatActivity {
         productImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                getGallery();
-              //  Intent i = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-              //  startActivityForResult(i, REQUEST_CODE);
+                if (isPermissionGranted()){
+                    startCameraDialog();
+                }else{
+                    requestCameraPermissions();
+                }
             }
         });
         addMail=(Button) findViewById(R.id.add_mail);
@@ -160,16 +192,34 @@ public class ProductActivity extends AppCompatActivity {
         return selected;
     }
 
-   // @Override
-   // protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-   //     super.onActivityResult(requestCode, resultCode, data);//collect result
-   //     if(resultCode==RESULT_OK && requestCode==REQUEST_CODE && data!=null){
-   //         Bundle extras= data.getExtras();
-    //        Bitmap b=(Bitmap) extras.get("data");
-    //        productImage.setImageBitmap(b);
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+       super.onActivityResult(requestCode, resultCode, data);//collect result
+       if(resultCode != RESULT_OK ){
+         return;
+        }
+       else if ((requestCode == REQUEST_CODE)) {
 
-       // }
-   // }
+           Uri uri =
+
+                   FileProvider.getUriForFile(ProductActivity.this,
+
+                           "com.example.kipchu.ecommerceapp.fileprovider",
+
+                           mPhotoFile);
+
+           photoURI=uri;
+
+           revokeUriPermission(uri,
+
+                   Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+
+           updatePhotoView();
+
+       }
+
+
+    }
 
    // @Override
     //public void onBackPressed() {
@@ -207,33 +257,6 @@ public class ProductActivity extends AppCompatActivity {
         }
         return super.onOptionsItemSelected(item);
     }
-    public void getGallery(){
-        Intent i = new Intent(Intent.ACTION_PICK);
-        i.setType("image/*");
-       // String[] mimeTypes = {"image/jpeg","image/png"};
-        startActivityForResult(i,RESULT_LOAD_IMAGE);
-
-    }
-    protected void onActivityResult(int requestCode, int resultCode, Intent data){
-        super.onActivityResult(requestCode, resultCode,data);
-        if (resultCode == this. RESULT_CANCELED) {
-            return;
-        }
-            try{
-                final Uri imageUri = data.getData();
-                final InputStream imageStream = getContentResolver().openInputStream(imageUri);
-                final Bitmap selectedImage = BitmapFactory.decodeStream(imageStream);
-                productImage.setImageBitmap(selectedImage);
-            }catch (FileNotFoundException e){
-                e.printStackTrace();
-                Toast.makeText(ProductActivity.this, "Something went wrong", Toast.LENGTH_LONG).show();
-            }
-        }else{
-            Toast.makeText(ProductActivity.this, "You haven't picked Image",Toast.LENGTH_LONG).show();
-        }
-
-
-    }
 
     private void movePrevious() {
         mPosition--;
@@ -269,4 +292,238 @@ public class ProductActivity extends AppCompatActivity {
         mProductBox.put(product);
         finish();
     }
+
+    private void startCameraDialog(){
+
+        ImageView cameraImageView,galarreyImageView,closeDialogImageView;
+
+
+
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+
+        alertDialogBuilder.setView(R.layout.view_camera);
+        //alertDialogBuilder.setIcon(R.drawable.default_user);
+       // alertDialogBuilder.setTitle("jhkhskdh");
+
+
+        final AlertDialog alertDialog = alertDialogBuilder.create();
+
+
+
+        alertDialog.show();
+
+
+
+        View view= LayoutInflater.from(ProductActivity.this).inflate(R.layout.view_camera,null);
+
+        cameraImageView=alertDialog.findViewById(R.id.dialog_camera);
+
+        galarreyImageView=alertDialog.findViewById(R.id.dialog_gallarey);
+
+        closeDialogImageView=alertDialog.findViewById(R.id.dialog_close);
+
+
+
+        closeDialogImageView.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+
+            public void onClick(View view) {
+
+                alertDialog.dismiss();
+
+            }
+
+        });
+
+        cameraImageView.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+
+            public void onClick(View view) {
+
+                savePhotoToFilePathAndRetrieve();
+                showCamera();
+
+            }
+
+        });
+
+    }
+
+    private void showCamera(){
+        Intent i = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        startActivityForResult(i, REQUEST_CODE);
+    }
+    private void requestCameraPermissions(){
+
+        if(!isPermissionGranted() && Build.VERSION.SDK_INT>= Build.VERSION_CODES.M) {
+
+
+
+            requestPermissions(CAMERA_PERMISSION,
+
+                    REQUEST_CAMERA_PERMISSIONS);
+
+
+
+        }
+
+    }
+
+
+
+    @Override
+
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+
+
+
+        switch (requestCode) {
+
+            case REQUEST_CAMERA_PERMISSIONS: {
+
+                if (isPermissionGranted()){
+
+                    startCameraDialog();
+
+                }
+
+                else{
+
+                    return;
+
+                }
+
+            }
+
+            default:
+
+                super.onRequestPermissionsResult(requestCode,
+
+                        permissions, grantResults);
+
+        }
+
+
+
+    }
+
+
+
+
+
+
+
+    private boolean isPermissionGranted() {
+
+
+
+        int result=3;
+
+        for (int i = 0; i < CAMERA_PERMISSION.length; i++) {
+
+            result = ContextCompat
+
+                    .checkSelfPermission(ProductActivity.this,
+
+                            CAMERA_PERMISSION[i]);
+
+            if(result!= PackageManager.PERMISSION_GRANTED){
+
+                break;
+
+            }
+
+        }
+
+        return result==PackageManager.PERMISSION_GRANTED;
+
+    }
+    public String getPhotoFilename() {
+
+        return "IMG_" + new Random().nextDouble() + ".jpg";
+
+    }
+
+    public File getPhotoFile() {
+
+        File filesDir = getFilesDir();
+
+        return new File(filesDir,
+
+                getPhotoFilename());
+
+    }
+
+    private void updatePhotoView() {
+
+        if(photoURI!=null) {
+
+            Glide.with(this).load(photoURI)
+
+
+
+                    .into(productImage);
+
+        }
+
+    }
+
+
+
+    public void savePhotoToFilePathAndRetrieve(){
+
+        mPhotoFile=getPhotoFile();
+
+        final Intent captureImage = new
+
+                Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+
+
+
+        Uri uri =
+
+                FileProvider.getUriForFile(ProductActivity.this,
+
+                        "com.example.kipchu.ecommerceapp.fileprovider",
+
+                        mPhotoFile);
+
+        captureImage.putExtra(MediaStore.EXTRA_OUTPUT, uri);
+
+        List<ResolveInfo> cameraActivities =
+
+                ProductActivity.this
+
+                        .getPackageManager().queryIntentActivities(captureImage,
+
+                        PackageManager.MATCH_DEFAULT_ONLY);
+
+        for (ResolveInfo activity :
+
+                cameraActivities) {
+
+            ProductActivity.this.grantUriPermission(activity.activityInfo.packageName,
+
+                    uri,
+
+                    Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+
+        }
+
+        startActivityForResult(captureImage,
+
+                REQUEST_CODE);
+
+    }
+
+
+
+
+
+
+
+
+
 }
