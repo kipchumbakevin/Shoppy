@@ -63,7 +63,7 @@ public class ProductActivity extends AppCompatActivity {
             Manifest.permission.WRITE_EXTERNAL_STORAGE,
     } ;
     EditText productName,productDescription,productPrice;
-    Button addProduct, addMail;
+    Button addProduct, delete, update;
     Spinner categorySpinner;
     ImageView productImage;
     private int Position;
@@ -71,6 +71,7 @@ public class ProductActivity extends AppCompatActivity {
     private Box<Product>mProductBox;
     private Uri photoURI;
     private File mPhotoFile;
+    private Product mProduct;
     //  private static final String IMAGE_DIRECTORY = "/demonuts";
   //  private int GALLERY = 1, CAMERA = 2;
 
@@ -87,6 +88,7 @@ public class ProductActivity extends AppCompatActivity {
         productPrice=(EditText) findViewById(R.id.product_price_edit);
         categorySpinner=(Spinner) findViewById(R.id.category_spinner);
         productImage=(ImageView) findViewById(R.id.product_image);
+        update = findViewById(R.id.update_product);
         productImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -97,11 +99,19 @@ public class ProductActivity extends AppCompatActivity {
                 }
             }
         });
-        addMail=(Button) findViewById(R.id.add_mail);
-        addMail.setOnClickListener(new View.OnClickListener() {
+        delete=(Button) findViewById(R.id.delete);
+        delete.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                sendEmail();
+                deleteProduct();
+
+               // sendEmail();
+            }
+        });
+        update.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                updateProduct();
             }
         });
         addProduct=(Button) findViewById(R.id.add_product) ;
@@ -125,12 +135,26 @@ public class ProductActivity extends AppCompatActivity {
 
     private void fillData() {
         if (mPosition != DEFAULT_POSITION) {
-            Product product = ProductListActivity.mProductArrayList.get(mPosition);
-            productName.setText(product.getName());
-            productPrice.setText(product.getPrice());
-            productImage.setImageResource(product.getImage());
-            productDescription.setText(product.getDescription());
+            showEditViews();
+            mProduct = ProductListActivity.mProductArrayList.get(mPosition);
+            productName.setText(mProduct.getName());
+            productPrice.setText(mProduct.getPrice());
+           // productImage.setImageResource(product.getImage());
+            Glide.with(this)
+                    .load(Uri.parse(mProduct.getImage()))
+                    .into(productImage);
+            productDescription.setText(mProduct.getDescription());
         }
+        else {
+            showAddViews();
+        }
+    }
+    private void showAddViews(){
+        addProduct.setVisibility(View.VISIBLE);
+    }
+    private void showEditViews(){
+        update.setVisibility(View.VISIBLE);
+        delete.setVisibility(View.VISIBLE);
     }
 
     private void sendEmail() {
@@ -217,15 +241,44 @@ public class ProductActivity extends AppCompatActivity {
            updatePhotoView();
 
        }
+       else if(requestCode==GALLERY_REQUEST_CODE){
 
+            Uri  photopath  =data.getData();
 
+            photoURI=photopath;
+
+            try {
+
+                Bitmap bitmap= MediaStore.Images.Media.getBitmap(this.getContentResolver(),photopath);
+
+                updatePhotoView();
+
+            } catch (IOException e) {
+
+                e.printStackTrace();
+            }
+        }
+
+        //for camera that saves to file
+
+        else if ((requestCode == REQUEST_CODE)) {
+
+            Uri uri = FileProvider.getUriForFile(ProductActivity.this,
+
+                    "com.example.kipchu.ecommerceapp.fileprovider",
+
+                            mPhotoFile);
+
+            photoURI=uri;
+
+            revokeUriPermission(uri,
+
+                    Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+
+            updatePhotoView();
+
+        }
     }
-
-   // @Override
-    //public void onBackPressed() {
-       //Toast.makeText(this,"Are you sure.." ,Toast.LENGTH_SHORT).show();
-
-   // }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -286,10 +339,31 @@ public class ProductActivity extends AppCompatActivity {
         String price = productPrice.getText().toString();
         String description = productDescription.getText().toString();
         String category = categorySpinner.getSelectedItem().toString();
+        String picturePath = photoURI.toString();
         //insert into product models
-        Product product = new Product(category,name,price,description,R.drawable.beat_headphones);
+        mProduct = new Product(category,name,price,description,picturePath);
         //add the product to object box->productBox
-        mProductBox.put(product);
+        mProductBox.put(this.mProduct);
+        finish();
+    }
+    private void updateProduct(){
+        String name = productName.getText().toString();
+        String price = productPrice.getText().toString();
+        String description = productDescription.getText().toString();
+        String category = categorySpinner.getSelectedItem().toString();
+        String picturePath = photoURI != null ?photoURI.toString():mProduct.getImage();
+        //insert into product models
+        mProduct.setName(name);
+        mProduct.setPrice(price);
+        mProduct.setDescription(description);
+        mProduct.setCategory(category);
+        mProduct.setImage(picturePath);
+        mProductBox.put(mProduct);
+        finish();
+    }
+    private void
+    deleteProduct(){
+        mProductBox.remove(mProduct);
         finish();
     }
 
@@ -297,22 +371,13 @@ public class ProductActivity extends AppCompatActivity {
 
         ImageView cameraImageView,galarreyImageView,closeDialogImageView;
 
-
-
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
 
         alertDialogBuilder.setView(R.layout.view_camera);
-        //alertDialogBuilder.setIcon(R.drawable.default_user);
-       // alertDialogBuilder.setTitle("jhkhskdh");
-
 
         final AlertDialog alertDialog = alertDialogBuilder.create();
 
-
-
         alertDialog.show();
-
-
 
         View view= LayoutInflater.from(ProductActivity.this).inflate(R.layout.view_camera,null);
 
@@ -321,8 +386,6 @@ public class ProductActivity extends AppCompatActivity {
         galarreyImageView=alertDialog.findViewById(R.id.dialog_gallarey);
 
         closeDialogImageView=alertDialog.findViewById(R.id.dialog_close);
-
-
 
         closeDialogImageView.setOnClickListener(new View.OnClickListener() {
 
@@ -343,18 +406,25 @@ public class ProductActivity extends AppCompatActivity {
             public void onClick(View view) {
 
                 savePhotoToFilePathAndRetrieve();
-                showCamera();
+                alertDialog.dismiss();
 
             }
 
         });
+        galarreyImageView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+         loadFromGallery();
+         alertDialog.dismiss();
+            }
+        });
 
     }
 
-    private void showCamera(){
-        Intent i = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        startActivityForResult(i, REQUEST_CODE);
-    }
+  //  private void showCamera(){
+   //     Intent i = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+   //     startActivityForResult(i, REQUEST_CODE);
+   // }
     private void requestCameraPermissions(){
 
         if(!isPermissionGranted() && Build.VERSION.SDK_INT>= Build.VERSION_CODES.M) {
@@ -449,11 +519,8 @@ public class ProductActivity extends AppCompatActivity {
     public File getPhotoFile() {
 
         File filesDir = getFilesDir();
-
         return new File(filesDir,
-
                 getPhotoFilename());
-
     }
 
     private void updatePhotoView() {
@@ -461,13 +528,8 @@ public class ProductActivity extends AppCompatActivity {
         if(photoURI!=null) {
 
             Glide.with(this).load(photoURI)
-
-
-
                     .into(productImage);
-
         }
-
     }
 
 
@@ -480,11 +542,7 @@ public class ProductActivity extends AppCompatActivity {
 
                 Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 
-
-
-        Uri uri =
-
-                FileProvider.getUriForFile(ProductActivity.this,
+        Uri uri = FileProvider.getUriForFile(ProductActivity.this,
 
                         "com.example.kipchu.ecommerceapp.fileprovider",
 
@@ -509,12 +567,22 @@ public class ProductActivity extends AppCompatActivity {
                     uri,
 
                     Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-
         }
-
         startActivityForResult(captureImage,
 
                 REQUEST_CODE);
+
+    }
+
+    private void loadFromGallery() {
+
+        Intent photointent = new Intent();
+
+        photointent.setType("image/*");
+
+        photointent.setAction(Intent.ACTION_GET_CONTENT);
+
+        startActivityForResult(Intent.createChooser(photointent,"Choose a product Photo"),GALLERY_REQUEST_CODE);
 
     }
 

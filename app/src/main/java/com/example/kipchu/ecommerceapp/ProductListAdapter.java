@@ -7,6 +7,7 @@ package com.example.kipchu.ecommerceapp;
 import android.content.Context;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.support.annotation.NonNull;
 
 import android.support.v7.widget.RecyclerView;
@@ -22,8 +23,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 
-
-
+import com.bumptech.glide.Glide;
 
 import java.util.ArrayList;
 public class ProductListAdapter extends RecyclerView.Adapter<ProductListAdapter.ProductViewHolders> {
@@ -62,9 +62,11 @@ public class ProductListAdapter extends RecyclerView.Adapter<ProductListAdapter.
 
         productViewHolders.productPrice.setText("Ksh."+product.getPrice());
         productViewHolders.strikedPrice.setText("Ksh." +product.getStrikedPrice());
-
-        productViewHolders.productImage.setImageResource(product.getImage());
-
+        Glide.with(mContext)
+                .load(Uri.parse(product.getImage()))
+                //.placeholder()
+                //.error()
+                .into(productViewHolders.productImage);
         productViewHolders.mcurrentPosition =position;
 
     }
