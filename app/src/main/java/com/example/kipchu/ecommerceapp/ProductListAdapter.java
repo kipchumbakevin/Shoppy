@@ -33,33 +33,20 @@ public class ProductListAdapter extends RecyclerView.Adapter<ProductListAdapter.
     private final ArrayList<Product> mProductArrayList;
 
     public ProductListAdapter(Context context, ArrayList<Product> productsArrayList) {
-
         mContext = context;
-
         mProductArrayList = productsArrayList;
-
         mLayoutInflater= LayoutInflater.from(mContext);
-
     }
     @NonNull
-
     @Override
-
     public ProductViewHolders onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
-
         View view=mLayoutInflater.inflate(R.layout.item_product,viewGroup,false);
-
         return new ProductViewHolders(view);
-
     }
     @Override
-
     public void onBindViewHolder(@NonNull ProductViewHolders productViewHolders, int position) {
-
         Product product= mProductArrayList.get(position);
-
         productViewHolders.productName.setText(product.getName());
-
         productViewHolders.productPrice.setText("Ksh."+product.getPrice());
         productViewHolders.strikedPrice.setText("Ksh." +product.getStrikedPrice());
         Glide.with(mContext)
@@ -68,44 +55,23 @@ public class ProductListAdapter extends RecyclerView.Adapter<ProductListAdapter.
                 //.error()
                 .into(productViewHolders.productImage);
         productViewHolders.mcurrentPosition =position;
-
     }
     @Override
     public int getItemCount() {
-
         return mProductArrayList.size();
-
     }
     public class ProductViewHolders extends RecyclerView.ViewHolder{
-
         private final ImageView productImage,addToCart;
-
         private final TextView productName,productPrice,strikedPrice;
-
         public  int mcurrentPosition;//could be used to track previous position
 
         public ProductViewHolders(@NonNull View itemView) {
-
             super(itemView);
-
             productImage=(ImageView) itemView.findViewById(R.id.product_image);
-
             addToCart=(ImageView) itemView.findViewById(R.id.add_to_cart_img);
-
             productName=(TextView) itemView.findViewById(R.id.product_name_txt);
-
             productPrice=(TextView) itemView.findViewById(R.id.product_price_txt);
             strikedPrice = (TextView) itemView.findViewById(R.id.product_price_striked_txt);
-
-            addToCart.setOnClickListener(new View.OnClickListener() {
-
-                @Override
-
-                public void onClick(View view) {
-
-                }
-
-            });
 itemView.setOnClickListener(new View.OnClickListener() {
     @Override
     public void onClick(View view) {
@@ -115,8 +81,6 @@ itemView.setOnClickListener(new View.OnClickListener() {
     }
 });
         }
-
     }
-
 }
 

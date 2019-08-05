@@ -59,42 +59,25 @@ public class ProductListActivity extends AppCompatActivity {
         if (savedInstanceState!=null){
             position=savedInstanceState.getInt("position");
         }
-
         mRecyclerView=(RecyclerView) findViewById(R.id.product_list_recyclerView);
-
         mProductListAdapter=new ProductListAdapter(ProductListActivity.this,mProductArrayList);
-
-
-
-
         mRecyclerView.setAdapter(mProductListAdapter);
-
-
         mRecyclerView.setLayoutManager(new GridLayoutManager(ProductListActivity.this,getResources().getInteger(R.integer.products_grid_span)));
-
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-
         setSupportActionBar(toolbar);
-
-
-
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.ic_add);
-
         fab.setOnClickListener(new View.OnClickListener() {
 
             @Override
 
             public void onClick(View view) {
-
                 Intent i=new Intent(ProductListActivity.this,ProductActivity.class);
-
                 startActivity(i);
-
             }
 
         });
         Log.d("Start", "Activity onCreate and position variable = "+ position);
-       initObjectBox();
+        initObjectBox();
     }
     private void initObjectBox(){
         mProductBox = ObjectBox.get().boxFor(Product.class);

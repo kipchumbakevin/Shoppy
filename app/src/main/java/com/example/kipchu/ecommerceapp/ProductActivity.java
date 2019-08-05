@@ -1,7 +1,6 @@
 package com.example.kipchu.ecommerceapp;
 
-
-        import android.Manifest;
+import android.Manifest;
         import android.app.Activity;
         import android.app.AlertDialog;
         import android.content.DialogInterface;
@@ -32,6 +31,7 @@ package com.example.kipchu.ecommerceapp;
         import android.widget.EditText;
         import android.widget.ImageView;
         import android.widget.LinearLayout;
+        import android.widget.NumberPicker;
         import android.widget.PopupWindow;
         import android.widget.Spinner;
         import android.widget.Toast;
@@ -72,8 +72,6 @@ public class ProductActivity extends AppCompatActivity {
     private Uri photoURI;
     private File mPhotoFile;
     private Product mProduct;
-    //  private static final String IMAGE_DIRECTORY = "/demonuts";
-  //  private int GALLERY = 1, CAMERA = 2;
 
     private void getIntentPosition(){
       mPosition = getIntent().getIntExtra(ProductListAdapter.CURRENT_POSITION_VALUE,DEFAULT_POSITION);
@@ -103,9 +101,26 @@ public class ProductActivity extends AppCompatActivity {
         delete.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                deleteProduct();
+                AlertDialog.Builder builder = new AlertDialog.Builder(ProductActivity.this);
+                builder.setTitle("Delete")
+                        .setMessage("Are you sure you want to delete?")
+                        .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                deleteProduct();
+                                finish();
 
-               // sendEmail();
+                            }
+                        })
+                        .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+
+                            }
+                        });
+                AlertDialog alert = builder.create();
+                alert.show();
+                // sendEmail();
             }
         });
         update.setOnClickListener(new View.OnClickListener() {
@@ -150,9 +165,11 @@ public class ProductActivity extends AppCompatActivity {
         }
     }
     private void showAddViews(){
+        setTitle("Add Products");
         addProduct.setVisibility(View.VISIBLE);
     }
     private void showEditViews(){
+        setTitle("Edit");
         update.setVisibility(View.VISIBLE);
         delete.setVisibility(View.VISIBLE);
     }
@@ -222,7 +239,7 @@ public class ProductActivity extends AppCompatActivity {
        if(resultCode != RESULT_OK ){
          return;
         }
-       else if ((requestCode == REQUEST_CODE)) {
+       else if (requestCode == REQUEST_CODE) {
 
            Uri uri =
 
@@ -364,7 +381,6 @@ public class ProductActivity extends AppCompatActivity {
     private void
     deleteProduct(){
         mProductBox.remove(mProduct);
-        finish();
     }
 
     private void startCameraDialog(){
@@ -447,8 +463,6 @@ public class ProductActivity extends AppCompatActivity {
 
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
 
-
-
         switch (requestCode) {
 
             case REQUEST_CAMERA_PERMISSIONS: {
@@ -458,7 +472,6 @@ public class ProductActivity extends AppCompatActivity {
                     startCameraDialog();
 
                 }
-
                 else{
 
                     return;
@@ -582,16 +595,6 @@ public class ProductActivity extends AppCompatActivity {
 
         photointent.setAction(Intent.ACTION_GET_CONTENT);
 
-        startActivityForResult(Intent.createChooser(photointent,"Choose a product Photo"),GALLERY_REQUEST_CODE);
-
+        startActivityForResult(Intent.createChooser(photointent, "Choose a product Photo"), GALLERY_REQUEST_CODE);
     }
-
-
-
-
-
-
-
-
-
 }
